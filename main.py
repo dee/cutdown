@@ -2,6 +2,8 @@ from ui.ui_mainwindow import Ui_MainWindow
 from PyQt5.QtCore import QTimer, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QDialog
 import pyperclip
+import subprocess
+import os
 
 
 class MainWindow(QDialog):
@@ -11,6 +13,8 @@ class MainWindow(QDialog):
 
     def __init__(self):
         super(MainWindow, self).__init__()
+        self.process = None
+
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.edtOutput.setText("output.mp4")
@@ -43,8 +47,22 @@ class MainWindow(QDialog):
             return
         self.ui.edtClipboard.setPlainText(new_text)
 
+    def build_cmd_line(self) -> str:
+        full_output_path = os.path.join(os.getcwd(), self.ui.edtOutput.text())
+        manifest = self.ui.edtClipboard.toPlainText()
+        return ["yt-dlp", manifest, "-r 200k", "-o "+full_output_path]
+
     def on_actionStart_triggered(self):
-        pass
+        self.ui.edtLog.clear()
+        self.process = subprocess.Popen(
+            build_cmd_line,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True)
+        for line in self.process.stdout:
+            self.ui.edtLog.appendPlainText(line)
+        self.process.stdout.close()
+        self.process.wait()
 
     def on_actionStop_triggered(self):
         pass
