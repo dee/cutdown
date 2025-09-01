@@ -1,0 +1,27 @@
+# Byte-compiled files
+*.pyc
+__pycache__/
+
+# Distribution/build folders
+build/
+dist/
+
+# Virtual environments
+env/
+venv/
+
+# Environment variable files
+.env
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.sublime-*
+
+# Test coverage reports
+.coverage
+.coverage.*
+
+# Logs and databases
+*.log
+*.sqlite3
