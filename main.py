@@ -51,12 +51,10 @@ class MainWindow(QDialog):
 
     def build_cmd_line(self) -> str:
         full_output_path = os.path.join(os.getcwd(), self.ui.edtOutput.text())
-        print(f"Using output path: {full_output_path}")
         manifest = self.ui.edtClipboard.toPlainText()
         return [manifest, "-r", "200K", "-o"+full_output_path]
 
     def on_action_start(self):
-        print("Start button pressed")
         self.ui.edtLog.clear()
 
         if self.process is not None:
@@ -75,7 +73,6 @@ class MainWindow(QDialog):
         self.can_stop.emit(True)
 
     def on_action_stop(self):
-        print("Stop button pressed")
         self.process.terminate()
 
     def on_txtClipboard_changed(self):
@@ -92,21 +89,20 @@ class MainWindow(QDialog):
     def on_readyread_stdout(self):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8").rstrip()
-        # print(f"OUT: {stdout}")
         self.ui.edtLog.appendPlainText(stdout)
         p = ProgressParser()
         (progress, eta) = p.parse(stdout)
-        print(f"Parsed: {progress}")
+        # print(f"Parsed: {progress}")
         if progress is not None:
             self.ui.pbMain.setValue(progress)
         if eta is not None:
-            # TODO: set text on a progress bar?
-            pass
+            self.ui.pbMain.setFormat(eta)
+        else:
+            self.ui.pbMain.setFormat("Unknown")
 
     def on_readyread_stderr(self):
         data = self.process.readAllStandardError()
         stderr = bytes(data).decode("utf8").rstrip()
-        print(f"ERR: {stderr}")
         self.ui.edtLog.appendPlainText(stderr)
 
     def on_process_state_changed(self, state):
@@ -122,10 +118,6 @@ class MainWindow(QDialog):
         print(f"Process finished!")
         self.can_start.emit(True)
         self.can_stop.emit(False)
-
-        # 
-        # [download]   2.8% of ~ 965.47MiB at  184.83KiB/s ETA 01:54:52 (frag 0/32)
-        # [download]   2.8% of ~ 971.72MiB at  189.37KiB/s ETA 01:51:26 (frag 0/32)
 
 
 def run():
