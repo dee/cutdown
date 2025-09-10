@@ -4,5 +4,34 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"build_systems": [
+    {
+      "name": "Py: run current file",
+      "cmd": ["python", "-Xutf8", "$file"],
+      "working_dir": "$project_path",
+      "env": {
+        "PYTHONPATH": "$project_path:$project_path/src"   // : a separator for Linux
+      },
+      "selector": "source.python"
+    },
+    {
+      "name": "PyTest: current file",
+      "cmd": ["python", "-m", "pytest", "-q", "$file"],
+      "working_dir": "$project_path",
+      "env": {
+        "PYTHONPATH": "$project_path:$project_path/src"
+      },
+      "selector": "source.python"
+    },
+    {
+      "name": "PyTest: whole project",
+      "cmd": ["python", "-m", "pytest", "-q"],
+      "working_dir": "$project_path",
+      "env": {
+        "PYTHONPATH": "$project_path:$project_path/src"
+      },
+      "selector": "source.python"
+    }
+  ]
 }
