@@ -25,3 +25,7 @@ venv/
 # Logs and databases
 *.log
 *.sqlite3
+
+# sublime text workspace
+*.sublime-workspace
+
