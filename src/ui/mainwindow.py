@@ -2,7 +2,7 @@ from PyQt5.QtCore import QTimer, pyqtSignal, QProcess
 from PyQt5.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
 import pyperclip
-
+import os
 
 class MainWindow(QDialog):
 
@@ -88,9 +88,10 @@ class MainWindow(QDialog):
     def on_readyread_stdout(self):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8").rstrip()
-        self.ui.edtLog.appendPlainText(stdout)
         (progress, eta) = self.parser.parse(stdout)
         # print(f"Parsed: {progress}")
+        if progress is None and eta is None:
+            self.ui.edtLog.appendPlainText(stdout)
         if progress is not None:
             self.ui.pbMain.setValue(progress)
         if eta is not None:
