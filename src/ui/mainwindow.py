@@ -1,7 +1,6 @@
 from PyQt5.QtCore import QTimer, pyqtSignal, QProcess
 from PyQt5.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
-import pyperclip
 import os
 
 class MainWindow(QDialog):
@@ -43,7 +42,7 @@ class MainWindow(QDialog):
         self.can_stop.emit(False)
 
     def on_timer(self):
-        new_text = pyperclip.paste()
+        new_text = QApplication.clipboard().text(QClipboard.Mode.Clipboard)
         if new_text == self.ui.edtClipboard.toPlainText():
             return
         self.ui.edtClipboard.setPlainText(new_text)
