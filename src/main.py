@@ -1,7 +1,7 @@
 import pyperclip
 import subprocess
 import os
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication
 
 from ui import MainWindow
 from core import ProgressParser

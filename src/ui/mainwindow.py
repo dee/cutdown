@@ -1,8 +1,9 @@
-from PyQt5.QtCore import QTimer, pyqtSignal, QProcess
-from PyQt5.QtWidgets import QApplication, QDialog
+from PyQt6.QtCore import QTimer, pyqtSignal, QProcess
+from PyQt6.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
 import pyperclip
 import os
+
 
 class MainWindow(QDialog):
 
