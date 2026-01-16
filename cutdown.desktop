@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Cutdown
+Exec=uv run src/main.py
+Icon=applications-python
+Type=Application
+Categories=Development;
+
