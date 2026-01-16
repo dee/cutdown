@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QTimer, pyqtSignal, QProcess
+from PyQt6.QtGui import QClipboard
 from PyQt6.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
-import pyperclip
 import os
 
 
@@ -44,7 +44,7 @@ class MainWindow(QDialog):
         self.can_stop.emit(False)
 
     def on_timer(self):
-        new_text = pyperclip.paste()
+        new_text = QApplication.clipboard().text(QClipboard.Mode.Clipboard)
         if new_text == self.ui.edtClipboard.toPlainText():
             return
         self.ui.edtClipboard.setPlainText(new_text)
@@ -107,9 +107,9 @@ class MainWindow(QDialog):
 
     def on_process_state_changed(self, state):
         states = {
-            QProcess.NotRunning: 'Not running',
-            QProcess.Starting: 'Starting',
-            QProcess.Running: 'Running',
+            QProcess.ProcessState.NotRunning: 'Not running',
+            QProcess.ProcessState.Starting: 'Starting',
+            QProcess.ProcessState.Running: 'Running',
         }
         state_name = states.get(state, 'Unknown')
         print(f"State changed: {state_name}")
