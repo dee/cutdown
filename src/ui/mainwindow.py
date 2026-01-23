@@ -18,7 +18,7 @@ class MainWindow(QDialog):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setWindowTitle("Videosaver")
+        self.setWindowTitle("cutdown")
         self.ui.edtOutput.setText("output.mp4")
         self.ui.pbMain.setValue(0)
         self.ui.btnStart.setDefaultAction(self.ui.actionStart)
@@ -69,14 +69,19 @@ class MainWindow(QDialog):
         self.process.stateChanged.connect(self.on_process_state_changed)
         self.process.finished.connect(self.on_process_finished)
         self.process.start()
+        print("Stopping timer")
+        self.timer.stop()
         self.can_start.emit(False)
         self.can_stop.emit(True)
 
     def on_action_stop(self):
         self.process.terminate()
+        print("Starting timer")
+        self.timer.start()
 
     def on_txtClipboard_changed(self):
         new_text = self.ui.edtClipboard.toPlainText()
+        # TODO: more formats
         flag = new_text is not None and new_text.find("m3u8") != -1
         self.can_start.emit(flag)
 
@@ -118,3 +123,6 @@ class MainWindow(QDialog):
         print(f"Process finished!")
         self.can_start.emit(True)
         self.can_stop.emit(False)
+        if not self.timer.isActive():
+            print("Starting timer")
+            self.timer.start()
