@@ -16,17 +16,11 @@ class MainWindow(QDialog):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setWindowTitle("Videosaver")
+        self.setWindowTitle("cutdown")
         self.ui.edtOutput.setText("output.mp4")
         self.ui.pbMain.setValue(0)
         self.ui.btnStart.setDefaultAction(self.ui.actionStart)
         self.ui.btnStop.setDefaultAction(self.ui.actionStop)
-
-        # establish timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.on_timer)
-        self.timer.setInterval(500)
-        self.timer.start()
 
         # set up actions
         self.ui.actionStart.triggered.connect(self.on_action_start)
@@ -41,11 +35,10 @@ class MainWindow(QDialog):
         self.can_start.emit(True)
         self.can_stop.emit(False)
 
-    def on_timer(self):
-        new_text = QApplication.clipboard().text(QClipboard.Mode.Clipboard)
-        if new_text == self.ui.edtClipboard.toPlainText():
-            return
-        self.ui.edtClipboard.setPlainText(new_text)
+        # connect to a clipboard
+        self.last_clipboard_text = ""
+        self.clipboard = QApplication.clipboard()
+        self.clipboard.dataChanged.connect(self.on_clipboard_dataChanged)
 
     def build_cmd_line(self) -> str:
         full_output_path = os.path.join(os.getcwd(), self.ui.edtOutput.text())
@@ -72,6 +65,15 @@ class MainWindow(QDialog):
 
     def on_action_stop(self):
         self.process.terminate()
+
+    def on_clipboard_dataChanged(self):
+        try:
+            current_text = self.clipboard.text(QClipboard.Mode.Clipboard)
+            if current_text and current_text != self.last_clipboard_text:
+                self.last_clipboard_text = current_text
+                self.ui.edtClipboard.setPlainText(current_text)
+        except Exception as e:
+            print(f"Clipboard error: {e}")
 
     def on_txtClipboard_changed(self):
         new_text = self.ui.edtClipboard.toPlainText()
