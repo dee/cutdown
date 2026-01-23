@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QTimer, pyqtSignal, QProcess
+from PyQt6.QtCore import pyqtSignal, QProcess
 from PyQt6.QtGui import QClipboard
 from PyQt6.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
@@ -24,12 +24,6 @@ class MainWindow(QDialog):
         self.ui.btnStart.setDefaultAction(self.ui.actionStart)
         self.ui.btnStop.setDefaultAction(self.ui.actionStop)
 
-        # establish timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.on_timer)
-        self.timer.setInterval(500)
-        self.timer.start()
-
         # set up actions
         self.ui.actionStart.triggered.connect(self.on_action_start)
         self.ui.actionStop.triggered.connect(self.on_action_stop)
@@ -43,11 +37,10 @@ class MainWindow(QDialog):
         self.can_start.emit(True)
         self.can_stop.emit(False)
 
-    def on_timer(self):
-        new_text = QApplication.clipboard().text(QClipboard.Mode.Clipboard)
-        if new_text == self.ui.edtClipboard.toPlainText():
-            return
-        self.ui.edtClipboard.setPlainText(new_text)
+        # connect to a clipboard
+        self.last_clipboard_text = ""
+        self.clipboard = QApplication.clipboard()
+        self.clipboard.dataChanged.connect(self.on_clipboard_dataChanged)
 
     def build_cmd_line(self) -> str:
         full_output_path = os.path.join(os.getcwd(), self.ui.edtOutput.text())
@@ -69,15 +62,20 @@ class MainWindow(QDialog):
         self.process.stateChanged.connect(self.on_process_state_changed)
         self.process.finished.connect(self.on_process_finished)
         self.process.start()
-        print("Stopping timer")
-        self.timer.stop()
         self.can_start.emit(False)
         self.can_stop.emit(True)
 
     def on_action_stop(self):
         self.process.terminate()
-        print("Starting timer")
-        self.timer.start()
+
+    def on_clipboard_dataChanged(self):
+        try:
+            current_text = self.clipboard.text(QClipboard.Mode.Clipboard)
+            if current_text and current_text != self.last_clipboard_text:
+                self.last_clipboard_text = current_text
+                self.ui.edtClipboard.setPlainText(current_text)
+        except Exception as e:
+            print(f"Clipboard error: {e}")
 
     def on_txtClipboard_changed(self):
         new_text = self.ui.edtClipboard.toPlainText()
@@ -123,6 +121,3 @@ class MainWindow(QDialog):
         print(f"Process finished!")
         self.can_start.emit(True)
         self.can_stop.emit(False)
-        if not self.timer.isActive():
-            print("Starting timer")
-            self.timer.start()
