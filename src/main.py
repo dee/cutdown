@@ -1,4 +1,3 @@
-import pyperclip
 import subprocess
 import os
 from PyQt5.QtWidgets import QApplication
