@@ -1,0 +1,18 @@
+[project]
+name = "cutdown"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pyperclip>=1.11.0",
+    "pyqt5>=5.15.11",
+]
+
+[dependency-groups]
+dev = [
+    "pyperclip>=1.11.0",
+    "pyqt5>=5.15.11",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+]
