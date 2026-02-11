@@ -1,6 +1,3 @@
-import pyperclip
-import subprocess
-import os
 from PyQt6.QtWidgets import QApplication
 
 from ui import MainWindow
