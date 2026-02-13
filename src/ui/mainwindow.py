@@ -3,6 +3,7 @@ from PyQt6.QtGui import QClipboard
 from PyQt6.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
 import os
+from loguru import logger
 
 
 class MainWindow(QDialog):
@@ -43,6 +44,7 @@ class MainWindow(QDialog):
         self.last_clipboard_text = ""
         self.clipboard = QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.on_clipboard_dataChanged)
+        logger.debug(f"Started, work directory: {os.getcwd()}")
 
     def build_cmd_line(self) -> []:
         result = []
@@ -56,7 +58,7 @@ class MainWindow(QDialog):
                 unit = "M"
             result.append(f"{self.ui.spnValue.value()}{unit}")
         result.append("-o"+full_output_path)
-        print(f"Command line: {result}")
+        logger.debug(f"Command line: {result}")
         return result
 
     def on_action_start(self):
@@ -86,14 +88,20 @@ class MainWindow(QDialog):
             if current_text and current_text != self.last_clipboard_text:
                 self.last_clipboard_text = current_text
                 self.ui.edtClipboard.setPlainText(current_text)
-        except Exception as e:
-            print(f"Clipboard error: {e}")
+                logger.debug(f"Clipboard text {current_text}")
+        except Exception:
+            logger.exception("Clipboard error")
 
     def on_txtClipboard_changed(self):
         new_text = self.ui.edtClipboard.toPlainText()
-        # TODO: more formats
-        flag = new_text is not None and new_text.find("m3u8") != -1
-        self.can_start.emit(flag)
+        
+        if new_text is None:
+            return
+
+        manifest = new_text.find("m3u8") != -1
+        # TODO: regexp
+        youtube = new_text.startswith("https://www.youtube.com/watch?v=")
+        self.can_start.emit(manifest or youtube)
 
     def on_can_start(self, flag: bool):
         self.ui.actionStart.setEnabled(flag)
@@ -105,7 +113,7 @@ class MainWindow(QDialog):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8").rstrip()
         (progress, eta) = self.parser.parse(stdout)
-        # print(f"Parsed: {progress}")
+
         if progress is None and eta is None:
             self.ui.edtLog.appendPlainText(stdout)
         if progress is not None:
@@ -127,10 +135,10 @@ class MainWindow(QDialog):
             QProcess.ProcessState.Running: "Running",
         }
         state_name = states.get(state, "Unknown")
-        print(f"State changed: {state_name}")
+        logger.debug(f"Process state changed: {state_name}")
 
     def on_process_finished(self):
-        print("Process finished!")
+        logger.debug("Process finished!")
         self.can_start.emit(True)
         self.can_stop.emit(False)
 
