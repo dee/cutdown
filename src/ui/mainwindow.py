@@ -1,4 +1,4 @@
-from PyQt6.QtCore import pyqtSignal, QProcess
+from PyQt6.QtCore import pyqtSignal, QProcess, Qt
 from PyQt6.QtGui import QClipboard
 from PyQt6.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
@@ -6,7 +6,6 @@ import os
 
 
 class MainWindow(QDialog):
-
     can_start = pyqtSignal(bool)
     can_stop = pyqtSignal(bool)
 
@@ -23,6 +22,9 @@ class MainWindow(QDialog):
         self.ui.pbMain.setValue(0)
         self.ui.btnStart.setDefaultAction(self.ui.actionStart)
         self.ui.btnStop.setDefaultAction(self.ui.actionStop)
+        self.ui.spnValue.setValue(200)
+        self.ui.rbKbit.setDown(True)
+        self.ui.chkUnlimited.setCheckState(Qt.CheckState.Unchecked)
 
         # set up actions
         self.ui.actionStart.triggered.connect(self.on_action_start)
@@ -42,10 +44,20 @@ class MainWindow(QDialog):
         self.clipboard = QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.on_clipboard_dataChanged)
 
-    def build_cmd_line(self) -> str:
+    def build_cmd_line(self) -> []:
+        result = []
         full_output_path = os.path.join(os.getcwd(), self.ui.edtOutput.text())
         manifest = self.ui.edtClipboard.toPlainText()
-        return [manifest, "-r", "200K", "-o"+full_output_path]
+        result.append(manifest)
+        if self.ui.chkUnlimited.checkState() == Qt.CheckState.Unchecked:
+            result.append("-r")
+            unit = "K"
+            if self.ui.rbMbit.isDown():
+                unit = "M"
+            result.append(f"{self.ui.spnValue.value()}{unit}")
+        result.append("-o"+full_output_path)
+        print(f"Command line: {result}")
+        return result
 
     def on_action_start(self):
         self.ui.edtLog.clear()
@@ -110,14 +122,21 @@ class MainWindow(QDialog):
 
     def on_process_state_changed(self, state):
         states = {
-            QProcess.ProcessState.NotRunning: 'Not running',
-            QProcess.ProcessState.Starting: 'Starting',
-            QProcess.ProcessState.Running: 'Running',
+            QProcess.ProcessState.NotRunning: "Not running",
+            QProcess.ProcessState.Starting: "Starting",
+            QProcess.ProcessState.Running: "Running",
         }
-        state_name = states.get(state, 'Unknown')
+        state_name = states.get(state, "Unknown")
         print(f"State changed: {state_name}")
 
     def on_process_finished(self):
-        print(f"Process finished!")
+        print("Process finished!")
         self.can_start.emit(True)
         self.can_stop.emit(False)
+
+    def on_chkUnlimited_checkStateChanged(self):
+        check_state = self.ui.chkUnlimited.checkState()
+        flag = check_state == Qt.CheckState.Unchecked
+        self.ui.spnValue.setEnabled(flag)
+        self.ui.rbKbit.setEnabled(flag)
+        self.ui.rbMbit.setEnabled(flag)
