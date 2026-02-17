@@ -3,6 +3,7 @@ from PyQt6.QtGui import QClipboard
 from PyQt6.QtWidgets import QApplication, QDialog
 from .ui_mainwindow import Ui_MainWindow
 import os
+import sys
 from loguru import logger
 
 
@@ -15,6 +16,7 @@ class MainWindow(QDialog):
 
         self.parser = parser
         self.process = None
+        self.mp4_format = False
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -44,10 +46,15 @@ class MainWindow(QDialog):
         self.last_clipboard_text = ""
         self.clipboard = QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.on_clipboard_dataChanged)
-        logger.debug(f"Started, work directory: {os.getcwd()}")
+        de = os.environ['XDG_CURRENT_DESKTOP']
+        logger.debug(f"Started, work directory: {os.getcwd()}. Desktop enviroment {de}, OS {sys.platform}")
 
     def build_cmd_line(self) -> []:
         result = []
+        if self.mp4_format:
+            result.append("-t")
+            result.append("mp4")
+
         full_output_path = os.path.join(os.getcwd(), self.ui.edtOutput.text())
         manifest = self.ui.edtClipboard.toPlainText()
         result.append(manifest)
@@ -73,7 +80,6 @@ class MainWindow(QDialog):
         self.process.setArguments(self.build_cmd_line())
         self.process.readyReadStandardOutput.connect(self.on_readyread_stdout)
         self.process.readyReadStandardError.connect(self.on_readyread_stderr)
-        self.process.stateChanged.connect(self.on_process_state_changed)
         self.process.finished.connect(self.on_process_finished)
         self.process.start()
         self.can_start.emit(False)
@@ -101,6 +107,7 @@ class MainWindow(QDialog):
         manifest = new_text.find("m3u8") != -1
         # TODO: regexp
         youtube = new_text.startswith("https://www.youtube.com/watch?v=")
+        self.mp4_format = youtube
         self.can_start.emit(manifest or youtube)
 
     def on_can_start(self, flag: bool):
@@ -127,15 +134,6 @@ class MainWindow(QDialog):
         data = self.process.readAllStandardError()
         stderr = bytes(data).decode("utf8").rstrip()
         self.ui.edtLog.appendPlainText(stderr)
-
-    def on_process_state_changed(self, state):
-        states = {
-            QProcess.ProcessState.NotRunning: "Not running",
-            QProcess.ProcessState.Starting: "Starting",
-            QProcess.ProcessState.Running: "Running",
-        }
-        state_name = states.get(state, "Unknown")
-        logger.debug(f"Process state changed: {state_name}")
 
     def on_process_finished(self):
         logger.debug("Process finished!")
